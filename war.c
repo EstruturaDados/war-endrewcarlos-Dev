@@ -13,10 +13,10 @@ typedef struct
 
 // Função que simula o ataque entre dois territórios
 void atacar(Territorio* atacante, Territorio* defensor){
+    int dadoAtacante = rand() % 6 + 1;   // rola dado do atacante (1 a 6)
+    int dadoDefensor = rand() % 6 + 1;   // rola dado do defensor (1 a 6)
 
-    int dadoAtacante = rand() % 6 + 1;   // rola dado atacante (1 a 6)
-    int dadoDefensor = rand() % 6 + 1;   // rola dado defensor (1 a 6)
-
+    // Mostra resultado do ataque
     printf("\n%s atacou %s!\n", atacante->nome, defensor->nome);
     printf("O Território atacante %s rolou o dado: %d\n", atacante->nome, dadoAtacante);
     printf("O Território defensor %s rolou o dado: %d\n", defensor->nome, dadoDefensor);
@@ -40,12 +40,69 @@ void liberarMemoria(Territorio* mapa) {
     free(mapa);
 }
 
-int main() {
+// Vetor de missões possíveis
+char* missoes[]= {
+    "Eliminar todas as tropas da cor vermelha",
+    "Eliminar todas as tropas da cor verde",
+    "Eliminar todas as tropas da cor amarela",
+    "Eliminar todas as tropas da cor marrom",
+    "Ter pelo menos 10 tropas em um território",
+};
 
+// Função para atribuir uma missão aleatória ao jogador
+void atribuirMissao(char* destino, char* missao[5], int totaldeMissao){
+    int indice = rand() % totaldeMissao;
+    strcpy(destino, missao[indice]);
+}
+
+// Função que verifica se a missão foi cumprida
+int verificarMissao(char* missao, Territorio* mapa, int tamanho) {
+    if (strcmp(missao, "Eliminar todas as tropas da cor vermelha") == 0) {
+        for (int i = 0; i < tamanho; i++) {
+            if (strcmp(mapa[i].cor, "vermelha") == 0 && mapa[i].tropas > 0) {
+                return 0; // missão não cumprida
+            }
+        }
+        return 1; // missão cumprida
+    }
+    else if (strcmp(missao, "Eliminar todas as tropas da cor verde") == 0) {
+        for (int i = 0; i < tamanho; i++) {
+            if (strcmp(mapa[i].cor, "verde") == 0 && mapa[i].tropas > 0) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    else if (strcmp(missao, "Eliminar todas as tropas da cor amarela") == 0) {
+        for (int i = 0; i < tamanho; i++) {
+            if (strcmp(mapa[i].cor, "amarela") == 0 && mapa[i].tropas > 0) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    else if (strcmp(missao, "Eliminar todas as tropas da cor marrom") == 0) {
+        for (int i = 0; i < tamanho; i++) {
+            if (strcmp(mapa[i].cor, "marrom") == 0 && mapa[i].tropas > 0) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    else if (strcmp(missao, "Ter pelo menos 10 tropas em um território") == 0){
+        for (int i = 0; i < tamanho; i++){
+            if (mapa[i].tropas >=10 ) return 1; // missão cumprida
+        }
+    }
+    return 0; // missão não cumprida
+}
+
+int main() {
     int quantidade;
 
-    srand(time(NULL)); // garante que os números aleatórios mudem a cada execução
+    srand(time(NULL)); // inicializa números aleatórios
 
+    // Pergunta ao usuário quantos territórios serão cadastrados
     printf("Quantos Territorios deseja Cadastrar? ");
     scanf("%d", &quantidade);
     getchar();
@@ -74,8 +131,14 @@ int main() {
         getchar();
     }
 
+    // Atribui missão aleatória ao jogador
+    char* missaojogador = calloc (100, sizeof(char));
+    atribuirMissao(missaojogador, missoes, 5);
+    printf("\nSua missão secreta: %s\n", missaojogador);
+
     int opcao;
     do {
+        // Menu principal
         printf("\n----- MENU -----\n");
         printf("1 - Listar territorios\n");
         printf("2 - Atacar\n");
@@ -96,6 +159,7 @@ int main() {
         else if (opcao == 2) {
             int atacante, defensor;
 
+            // Seleção de territórios para ataque
             printf("Escolha o territorio atacante (1 a %d): ", quantidade);
             scanf("%d", &atacante);
             printf("Escolha o territorio defensor (1 a %d): ", quantidade);
@@ -106,17 +170,23 @@ int main() {
                 printf("Não é possível atacar o mesmo território!\n");
             }
             else if (strcmp(mapa[atacante-1].cor, mapa[defensor-1].cor) == 0) {
-                // impede ataque entre territórios da mesma cor
                 printf("Não é possível atacar um território do mesmo exército!\n");
             }
             else {
-                atacar(&mapa[atacante - 1], &mapa[defensor - 1]);
+                atacar(&mapa[atacante - 1], &mapa[defensor - 1]); // realiza ataque
+            }
+
+            // Verifica se missão foi cumprida após o ataque
+            if (verificarMissao(missaojogador, mapa, quantidade)){
+                printf("\nParabéns! Você cumpriu sua missão e venceu o jogo!!!\n");
+                break;
             }
         }
     } while(opcao != 3);
     
     // Libera memória alocada
     liberarMemoria(mapa);
+    free(missaojogador);
 
     printf("\nPrograma encerrado. Obrigado por jogar!\n");
 
